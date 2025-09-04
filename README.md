@@ -218,4 +218,4 @@ Para reportar bugs o solicitar nuevas características, por favor crear un issue
 
 ---
 
-**Nota**: Este es un proyecto de demostración. Para uso en producción, asegúrate de implementar todas las validaciones de seguridad y cumplir con los requisitos completos de SUNAT.
+**Nota**: Este es un proyecto de demostración. Para uso en producción, asegúrate de implementar todas las validaciones de seguridad y cumplir con los requisitos completos de SUNAT.# infac
