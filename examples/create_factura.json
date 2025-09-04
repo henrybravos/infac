@@ -1,0 +1,56 @@
+{
+  "type": "01",
+  "serie": "F001",
+  "number": "00000001",
+  "issue_date": "2025-01-15",
+  "due_date": "2025-02-15",
+  "currency_code": "PEN",
+  "customer": {
+    "document_type": "6",
+    "document_number": "20123456789",
+    "name": "EMPRESA CLIENTE S.A.C.",
+    "trade_name": "CLIENTE SAC",
+    "address": "AV. JAVIER PRADO 123",
+    "district": "SAN ISIDRO",
+    "province": "LIMA",
+    "department": "LIMA",
+    "country": "PE",
+    "email": "cliente@empresa.pe",
+    "phone": "+51-1-4567890"
+  },
+  "lines": [
+    {
+      "quantity": 2,
+      "unit_code": "NIU",
+      "description": "Servicio de consultoría en sistemas",
+      "unit_price": 500.00,
+      "product_code": "SERV001",
+      "taxes": [
+        {
+          "type": "IGV",
+          "code": "1000",
+          "rate": 18.00
+        }
+      ]
+    },
+    {
+      "quantity": 1,
+      "unit_code": "ZZ",
+      "description": "Licencia de software anual",
+      "unit_price": 1200.00,
+      "product_code": "LIC001",
+      "taxes": [
+        {
+          "type": "IGV",
+          "code": "1000",
+          "rate": 18.00
+        }
+      ]
+    }
+  ],
+  "payment_terms": {
+    "payment_means_code": "001",
+    "due_date": "2025-02-15T00:00:00Z",
+    "amount": 2596.00
+  }
+}

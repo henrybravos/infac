@@ -1,0 +1,37 @@
+server:
+  host: "0.0.0.0"
+  port: "8883"
+
+sunat:
+  # For production use: https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService
+  # For beta testing: https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService
+  url: "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService"
+  username: "MODDATOS"
+  password: "MODDATOS"
+  
+  # OSE Configuration (Optional - for using external OSE providers)
+  ose:
+    enabled: false
+    provider: "nubefact" # or other OSE provider
+    url: ""
+    username: ""
+    password: ""
+
+# Digital Certificate Configuration
+certificate:
+  pfx_path: "./pkg/signature/206127901684LNEOFORCE.pfx"
+  password: "20612790168NEOFORCE"  # For production, use environment variable
+
+# Company information (Emisor)
+issuer:
+  document_type: "6"  # RUC
+  document_number: "20612790168"  # Your RUC number
+  name: "NEOFORCE BUSINESS SOLUTIONS S.A.C."
+  trade_name: "NEOFORCE"
+  address: "AV. EJEMPLO 123"
+  district: "LIMA"
+  province: "LIMA"
+  department: "LIMA"
+  country: "PE"
+  email: "contacto@neoforce.pe"
+  phone: "+51-1-4251234"

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+  <ext:UBLExtensions>
+    <ext:UBLExtension>
+      <ext:ExtensionContent><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="SignatureST">
+			<ds:SignedInfo>
+				<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+				<ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+				<ds:Reference URI="">
+					<ds:Transforms>
+						<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+					</ds:Transforms>
+					<ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+					<ds:DigestValue>n36p9Svd6m0wrQZC2djoXBIWPh8=</ds:DigestValue>
+				</ds:Reference>
+			</ds:SignedInfo>
+			<ds:SignatureValue>X4l0bsU3yK7Sourqn0YOjdkhJVI5Fp6RqGL/t6600wX4A4uHtzSU1Jp9+jX8aJtgpdUsYZNkPRIiCtFFHBrc0EMsvkS8fZa+0p8AY/ALyq7J/r+2VCYMQJF1nyM4SzzObip8vXFwR+jFPvV/RxTW+9ukLT0cq8QMh/m/yJR0Ctl0XYEqIS/D+k3sO+B9wGr3xEJGzi5ZuFHaXZEwGFcX2tKVwJfGl1UVe88Ou+isKtSXapDQsH9xCmBTlyhnuwsX9rlEcXmCsvlnI9rgdOzeOnn2l/JSJnqkJFqNwK2hdSTGrp01RxzYwKXDqe64tverxmyYFjcDMO3Re4tvqPn11g==</ds:SignatureValue>
+			<ds:KeyInfo>
+				<ds:X509Data>
+					<ds:X509Certificate>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</ds:X509Certificate>
+				</ds:X509Data>
+			</ds:KeyInfo>
+		</ds:Signature></ext:ExtensionContent>
+    </ext:UBLExtension>
+  </ext:UBLExtensions>
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>2.0</cbc:CustomizationID>
+  <cbc:ID>F001-00000010</cbc:ID>
+  <cbc:IssueDate>2025-09-04</cbc:IssueDate>
+  <cbc:IssueTime>00:00:00</cbc:IssueTime>
+  <cbc:InvoiceTypeCode listAgencyName="PE:SUNAT" listName="Tipo de Documento" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>PEN</cbc:DocumentCurrencyCode>
+  <cac:Signature>
+    <cbc:ID>IDSignST</cbc:ID>
+    <cac:SignatoryParty>
+      <cac:PartyIdentification>
+        <cbc:ID>20612790168</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>NEOFORCE BUSINESS SOLUTIONS S.A.C.</cbc:Name>
+      </cac:PartyName>
+    </cac:SignatoryParty>
+    <cac:DigitalSignatureAttachment>
+      <cac:ExternalReference>
+        <cbc:URI>#SignatureST</cbc:URI>
+      </cac:ExternalReference>
+    </cac:DigitalSignatureAttachment>
+  </cac:Signature>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="6" schemeName="Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">20612790168</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>NEOFORCE</cbc:Name>
+      </cac:PartyName>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>NEOFORCE BUSINESS SOLUTIONS S.A.C.</cbc:RegistrationName>
+        <cbc:CompanyID schemeID="6" schemeName="SUNAT:Identificador de Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">20612790168</cbc:CompanyID>
+        <cac:TaxScheme>
+          <cbc:ID>9999</cbc:ID>
+          <cbc:Name>SUNAT</cbc:Name>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:PartyLegalEntity>
+        <cbc:RegistrationName>NEOFORCE BUSINESS SOLUTIONS S.A.C.</cbc:RegistrationName>
+      </cac:PartyLegalEntity>
+      <cac:Contact>
+        <cbc:ElectronicMail>contacto@neoforce.pe</cbc:ElectronicMail>
+        <cbc:Telephone>+51-1-4251234</cbc:Telephone>
+      </cac:Contact>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="1" schemeName="Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">12345678</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name></cbc:Name>
+      </cac:PartyName>
+      <cac:PartyLegalEntity>
+        <cbc:RegistrationName>Cliente de Prueba</cbc:RegistrationName>
+      </cac:PartyLegalEntity>
+      <cac:Contact></cac:Contact>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="PEN">18</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="PEN">100</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="PEN">18</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:ID>1000</cbc:ID>
+        <cbc:Percent>18</cbc:Percent>
+        <cac:TaxScheme>
+          <cbc:ID>9999</cbc:ID>
+          <cbc:Name></cbc:Name>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="PEN">100</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="PEN">118</cbc:TaxInclusiveAmount>
+    <cbc:TaxExclusiveAmount currencyID="PEN">100</cbc:TaxExclusiveAmount>
+    <cbc:PayableAmount currencyID="PEN">118</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="NIU">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="PEN">100</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <cbc:PriceAmount currencyID="PEN">118</cbc:PriceAmount>
+        <cbc:PriceTypeCode>01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">18</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">100</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">18</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:ID>1000</cbc:ID>
+          <cbc:Percent>18</cbc:Percent>
+          <cac:TaxScheme>
+            <cbc:ID>9999</cbc:ID>
+            <cbc:Name></cbc:Name>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Producto de prueba</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>P001</cbc:ID>
+      </cac:SellersItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">100</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

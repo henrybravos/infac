@@ -1,0 +1,39 @@
+{
+  "type": "07",
+  "serie": "FC01",
+  "number": "00000001",
+  "issue_date": "2025-01-16",
+  "currency_code": "PEN",
+  "customer": {
+    "document_type": "6",
+    "document_number": "20123456789",
+    "name": "EMPRESA CLIENTE S.A.C.",
+    "address": "AV. JAVIER PRADO 123",
+    "district": "SAN ISIDRO",
+    "province": "LIMA",
+    "department": "LIMA",
+    "country": "PE"
+  },
+  "related_documents": [
+    {
+      "document_type": "01",
+      "serie": "F001",
+      "number": "00000001"
+    }
+  ],
+  "lines": [
+    {
+      "quantity": 1,
+      "unit_code": "NIU",
+      "description": "Anulación por error en facturación",
+      "unit_price": 500.00,
+      "taxes": [
+        {
+          "type": "IGV",
+          "code": "1000",
+          "rate": 18.00
+        }
+      ]
+    }
+  ]
+}
