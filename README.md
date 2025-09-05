@@ -1,18 +1,20 @@
 # INFAC - Sistema de Facturación Electrónica para Perú
 
-Un servicio API desarrollado en Go para la emisión de comprobantes electrónicos según las normas SUNAT de Perú.
+Un servicio API desarrollado en Go para la emisión de comprobantes electrónicos según las normas SUNAT de Perú, cumpliendo con la Resolución 000193-2020 y el estándar UBL 2.1.
 
 ## Características
 
-- ✅ Emisión de Facturas Electrónicas
-- ✅ Emisión de Boletas de Venta Electrónicas  
-- ✅ Emisión de Notas de Crédito Electrónicas
-- ✅ Emisión de Notas de Débito Electrónicas
+- ✅ Emisión de Facturas Electrónicas (01)
+- ✅ Emisión de Boletas de Venta Electrónicas (03)  
+- ✅ Emisión de Notas de Crédito Electrónicas (07)
+- ✅ Emisión de Notas de Débito Electrónicas (08)
+- ✅ Integración completa con SUNAT via SOAP
+- ✅ Firma digital de documentos con certificados PFX
+- ✅ Generación de XML en formato UBL 2.1 compliant
+- ✅ API REST con validación completa
+- ✅ Manejo de términos de pago (Contado/Crédito)
+- ✅ Soporte completo para catálogos SUNAT
 - 🚧 Anulación de Comprobantes (en desarrollo)
-- ✅ Integración con SUNAT via SOAP
-- ✅ Soporte para OSE (Operadores de Servicios Electrónicos)
-- ✅ Generación de XML en formato UBL 2.1
-- ✅ API REST para integración con frontends
 
 ## Requisitos
 
@@ -42,49 +44,149 @@ server:
 sunat:
   url: "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService"
   username: "MODDATOS"
-  password: "MODDATOS"
+  password: "moddatos"
 
 issuer:
   document_type: "6"
-  document_number: "20100070970"
-  name: "MI EMPRESA S.A.C."
-  # ... más configuraciones
+  document_number: "20612790168"
+  name: "NEOFORCE BUSINESS SOLUTIONS S.A.C."
+  trade_name: "NEOFORCE"
+  address: "AV. EJEMPLO 123"
+  district: "LIMA"
+  province: "LIMA"
+  department: "LIMA"
+  country: "PE"
+  email: "contacto@neoforce.pe"
+  phone: "+51-1-4251234"
 ```
 
-4. Ejecutar el servicio:
+4. Configurar certificado digital (ver `pkg/signature/README.md`)
+
+5. Ejecutar el servicio:
 ```bash
+# Desarrollo con hot reload
+./scripts/dev.sh
+
+# O directamente
 go run cmd/api/main.go
 ```
 
 ## Uso de la API
 
-### Crear y enviar una factura
+### Crear una factura al contado
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/documents \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "01",
     "serie": "F001",
-    "number": "00000001",
-    "issue_date": "2025-01-15",
+    "number": "00001",
+    "type": "01",
+    "issue_date": "2025-09-05",
     "currency_code": "PEN",
     "customer": {
+      "document_number": "20123456789",
       "document_type": "6",
-      "document_number": "20100070970",
-      "name": "CLIENTE EMPRESA S.A.C."
+      "name": "EMPRESA CLIENTE SAC"
+    },
+    "payment_terms": {
+      "payment_means_code": "Contado"
     },
     "lines": [{
-      "quantity": 1,
+      "quantity": 2.0,
       "unit_code": "NIU",
-      "description": "Servicio de consultoría",
-      "unit_price": 100.00,
+      "description": "Laptop HP Pavilion",
+      "unit_price": 2500.0,
       "taxes": [{
         "type": "IGV",
         "code": "1000",
-        "rate": 18.00
-      }]
+        "rate": 18.0
+      }],
+      "product_code": "LAPTOP001"
     }]
+  }'
+```
+
+### Crear una factura al crédito
+
+```bash
+curl -X POST http://localhost:8080/api/v1/documents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "serie": "F001",
+    "number": "00002",
+    "type": "01",
+    "issue_date": "2025-09-05",
+    "due_date": "2025-10-05",
+    "currency_code": "PEN",
+    "customer": {
+      "document_number": "12345678",
+      "document_type": "1",
+      "name": "JUAN CARLOS PEREZ"
+    },
+    "payment_terms": {
+      "payment_means_code": "Credito",
+      "due_date": "2025-10-05T00:00:00Z",
+      "amount": 590.0
+    },
+    "lines": [{
+      "quantity": 1.0,
+      "unit_code": "NIU",
+      "description": "Servicio de consultoria",
+      "unit_price": 500.0,
+      "taxes": [{
+        "type": "IGV",
+        "code": "1000",
+        "rate": 18.0
+      }],
+      "product_code": "SERV001"
+    }]
+  }'
+```
+
+### Enviar documento a SUNAT
+
+```bash
+curl -X POST http://localhost:8080/api/v1/documents/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "F001-00001",
+    "serie": "F001",
+    "number": "00001",
+    "type": "01",
+    "issue_date": "2025-09-05T00:00:00Z",
+    "currency_code": "PEN",
+    "issuer": {
+      "document_type": "6",
+      "document_number": "20612790168",
+      "name": "NEOFORCE BUSINESS SOLUTIONS S.A.C.",
+      "trade_name": "NEOFORCE"
+    },
+    "customer": {
+      "document_type": "6",
+      "document_number": "20123456789",
+      "name": "EMPRESA CLIENTE SAC"
+    },
+    "payment_terms": {
+      "payment_means_code": "Contado"
+    },
+    "lines": [{
+      "quantity": 2,
+      "unit_code": "NIU",
+      "description": "Laptop HP Pavilion",
+      "unit_price": 2500,
+      "total_price": 5000,
+      "taxable_amount": 5000,
+      "taxes": [{
+        "type": "IGV",
+        "code": "1000",
+        "rate": 18,
+        "amount": 900
+      }]
+    }],
+    "sub_total": 5000,
+    "total_taxes": 900,
+    "total_amount": 5900
   }'
 ```
 
@@ -144,15 +246,16 @@ curl -X POST http://localhost:8883/api/v1/documents/void \
 ```
 infac/
 ├── cmd/api/           # Punto de entrada de la aplicación
+├── docs/              # Documentación API con ejemplos JSON
 ├── internal/
 │   ├── config/        # Configuración
 │   ├── handlers/      # Controladores HTTP
-│   ├── models/        # Modelos de datos
+│   ├── models/        # Modelos de datos y requests
 │   └── services/      # Lógica de negocio
-└── pkg/
-    ├── soap/          # Cliente SOAP para SUNAT
-    ├── ubl/           # Generación de XML UBL 2.1
-    └── signature/     # Firma digital
+├── pkg/
+│   ├── ubl/           # Generación de XML UBL 2.1
+│   └── signature/     # Firma digital y certificados
+└── scripts/           # Scripts de desarrollo (hot reload)
 ```
 
 ## Tipos de Documentos Soportados

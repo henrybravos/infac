@@ -1,0 +1,234 @@
+{
+  "create_invoice_cash": {
+    "description": "Create invoice with cash payment (Contado)",
+    "endpoint": "POST /api/v1/documents",
+    "request": {
+      "serie": "F001",
+      "number": "00001",
+      "type": "01",
+      "issue_date": "2025-09-05",
+      "currency_code": "PEN",
+      "customer": {
+        "document_number": "20123456789",
+        "document_type": "6",
+        "name": "EMPRESA CLIENTE SAC"
+      },
+      "payment_terms": {
+        "payment_means_code": "Contado"
+      },
+      "lines": [
+        {
+          "quantity": 2.0,
+          "unit_code": "NIU",
+          "description": "Laptop HP Pavilion",
+          "unit_price": 2500.0,
+          "taxes": [
+            {
+              "type": "IGV",
+              "code": "1000",
+              "rate": 18.0
+            }
+          ],
+          "product_code": "LAPTOP001"
+        }
+      ]
+    }
+  },
+  "create_invoice_credit": {
+    "description": "Create invoice with credit payment (Credito)",
+    "endpoint": "POST /api/v1/documents",
+    "request": {
+      "serie": "F001", 
+      "number": "00002",
+      "type": "01",
+      "issue_date": "2025-09-05",
+      "due_date": "2025-10-05",
+      "currency_code": "PEN",
+      "customer": {
+        "document_number": "12345678",
+        "document_type": "1",
+        "name": "JUAN CARLOS PEREZ"
+      },
+      "payment_terms": {
+        "payment_means_code": "Credito",
+        "due_date": "2025-10-05T00:00:00Z",
+        "amount": 590.0
+      },
+      "lines": [
+        {
+          "quantity": 1.0,
+          "unit_code": "NIU", 
+          "description": "Servicio de consultoria",
+          "unit_price": 500.0,
+          "taxes": [
+            {
+              "type": "IGV",
+              "code": "1000",
+              "rate": 18.0
+            }
+          ],
+          "product_code": "SERV001"
+        }
+      ]
+    }
+  },
+  "send_document": {
+    "description": "Send document to SUNAT",
+    "endpoint": "POST /api/v1/documents/send",
+    "request": {
+      "id": "F001-00001",
+      "serie": "F001",
+      "number": "00001", 
+      "type": "01",
+      "issue_date": "2025-09-05T00:00:00Z",
+      "currency_code": "PEN",
+      "issuer": {
+        "document_type": "6",
+        "document_number": "20612790168",
+        "name": "NEOFORCE BUSINESS SOLUTIONS S.A.C.",
+        "trade_name": "NEOFORCE"
+      },
+      "customer": {
+        "document_type": "6",
+        "document_number": "20123456789",
+        "name": "EMPRESA CLIENTE SAC"
+      },
+      "payment_terms": {
+        "payment_means_code": "Contado"
+      },
+      "lines": [
+        {
+          "quantity": 2,
+          "unit_code": "NIU",
+          "description": "Laptop HP Pavilion",
+          "unit_price": 2500,
+          "total_price": 5000,
+          "taxable_amount": 5000,
+          "taxes": [
+            {
+              "type": "IGV",
+              "code": "1000",
+              "rate": 18,
+              "amount": 900
+            }
+          ]
+        }
+      ],
+      "sub_total": 5000,
+      "total_taxes": 900,
+      "total_amount": 5900
+    }
+  },
+  "create_credit_note": {
+    "description": "Create credit note",
+    "endpoint": "POST /api/v1/documents",
+    "request": {
+      "serie": "FC01",
+      "number": "00001",
+      "type": "07",
+      "issue_date": "2025-09-05",
+      "currency_code": "PEN",
+      "customer": {
+        "document_number": "20123456789",
+        "document_type": "6",
+        "name": "EMPRESA CLIENTE SAC"
+      },
+      "payment_terms": {
+        "payment_means_code": "Contado"
+      },
+      "related_documents": [
+        {
+          "document_type": "01",
+          "serie": "F001",
+          "number": "00001"
+        }
+      ],
+      "lines": [
+        {
+          "quantity": 1.0,
+          "unit_code": "NIU",
+          "description": "Devolucion por defecto",
+          "unit_price": 100.0,
+          "taxes": [
+            {
+              "type": "IGV",
+              "code": "1000", 
+              "rate": 18.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "responses": {
+    "success_created": {
+      "description": "Document created successfully",
+      "status": 201,
+      "response": {
+        "id": "F001-00001",
+        "serie": "F001", 
+        "number": "00001",
+        "type": "01",
+        "issue_date": "2025-09-05T00:00:00Z",
+        "currency_code": "PEN",
+        "status": "draft",
+        "sub_total": 5000,
+        "total_taxes": 900,
+        "total_amount": 5900,
+        "created_at": "2025-09-05T12:00:00Z",
+        "updated_at": "2025-09-05T12:00:00Z"
+      }
+    },
+    "success_sent": {
+      "description": "Document sent and accepted by SUNAT",
+      "status": 200,
+      "response": {
+        "id": "F001-00001",
+        "status": "accepted",
+        "cdr": {
+          "response_code": "0",
+          "description": "Accepted"
+        },
+        "updated_at": "2025-09-05T12:05:00Z"
+      }
+    },
+    "error_validation": {
+      "description": "Validation error", 
+      "status": 400,
+      "response": {
+        "error": "Key: 'CreateDocumentRequest.PaymentTerms' Error:Field validation for 'PaymentTerms' failed on the 'required' tag"
+      }
+    },
+    "error_sunat": {
+      "description": "SUNAT rejection error",
+      "status": 500,
+      "response": {
+        "error": "document rejected by SUNAT: El dato ingreso como Forma de Pago o Medio de Pago no corresponde al valor esperado (catalogo nro 59)"
+      }
+    }
+  },
+  "payment_means_codes": {
+    "description": "Valid payment means codes",
+    "values": {
+      "Contado": "Cash payment - paid on issue date",
+      "Credito": "Credit payment - paid after issue date, requires due_date and amount"
+    }
+  },
+  "document_types": {
+    "description": "Valid document types",
+    "values": {
+      "01": "Factura (Invoice)",
+      "03": "Boleta de Venta (Receipt)", 
+      "07": "Nota de Crédito (Credit Note)",
+      "08": "Nota de Débito (Debit Note)"
+    }
+  },
+  "tax_codes": {
+    "description": "Valid tax codes",
+    "values": {
+      "1000": "IGV - Impuesto General a las Ventas (18%)",
+      "2000": "ISC - Impuesto Selectivo al Consumo",
+      "7152": "ICBP - Impuesto a las Bolsas de Plástico"
+    }
+  }
+}

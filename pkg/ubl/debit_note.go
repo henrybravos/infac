@@ -87,10 +87,11 @@ func GenerateDebitNoteXML(doc *models.Document, issuer *models.Company) (*DebitN
 		}
 	}
 	
-	// Signature (similar a Invoice)
+	// Signature (using document-specific ID)
+	documentID := fmt.Sprintf("%s-%s", doc.Serie, doc.Number)
 	debitNote.Signature = []Signature{
 		{
-			ID: "IDSignST",
+			ID: documentID,
 			SignatoryParty: SignatoryParty{
 				PartyIdentification: PartyIdentification{
 					ID: IDType{Value: issuer.DocumentNumber},
@@ -101,7 +102,7 @@ func GenerateDebitNoteXML(doc *models.Document, issuer *models.Company) (*DebitN
 			},
 			DigitalSignatureAttachment: DigitalSignatureAttachment{
 				ExternalReference: ExternalReference{
-					URI: "#SignatureST",
+					URI: fmt.Sprintf("#%s", documentID),
 				},
 			},
 		},
@@ -135,7 +136,7 @@ func GenerateDebitNoteXML(doc *models.Document, issuer *models.Company) (*DebitN
 						Value:            issuer.DocumentNumber,
 					},
 					TaxScheme: TaxScheme{
-						ID:   "9999",
+						ID: IDType{Value: issuer.DocumentNumber},
 						Name: "SUNAT",
 					},
 				},
@@ -186,10 +187,10 @@ func GenerateDebitNoteXML(doc *models.Document, issuer *models.Company) (*DebitN
 					TaxableAmount: MonetaryAmount{CurrencyID: doc.CurrencyCode, Value: 0},
 					TaxAmount:     MonetaryAmount{CurrencyID: doc.CurrencyCode, Value: 0},
 					TaxCategory: TaxCategory{
-						ID:      tax.Code,
+						ID: IDType{Value: getTaxCategoryID(tax.Type)},
 						Percent: tax.Rate,
 						TaxScheme: TaxScheme{
-							ID:   getTaxSchemeID(tax.Type),
+							ID: IDType{Value: getTaxSchemeID(tax.Type)},
 							Name: string(tax.Type),
 						},
 					},
@@ -250,7 +251,7 @@ func GenerateDebitNoteXML(doc *models.Document, issuer *models.Company) (*DebitN
 		}
 		
 		if line.ProductCode != "" {
-			debitNoteLine.Item.SellersItemIdentification = SellersItemIdentification{
+			debitNoteLine.Item.SellersItemIdentification = &SellersItemIdentification{
 				ID: line.ProductCode,
 			}
 		}
@@ -273,10 +274,10 @@ func GenerateDebitNoteXML(doc *models.Document, issuer *models.Company) (*DebitN
 						Value:      tax.Amount,
 					},
 					TaxCategory: TaxCategory{
-						ID:      tax.Code,
+						ID: IDType{Value: getTaxCategoryID(tax.Type)},
 						Percent: tax.Rate,
 						TaxScheme: TaxScheme{
-							ID:   getTaxSchemeID(tax.Type),
+							ID: IDType{Value: getTaxSchemeID(tax.Type)},
 							Name: string(tax.Type),
 						},
 					},
@@ -294,7 +295,7 @@ func GenerateDebitNoteXML(doc *models.Document, issuer *models.Company) (*DebitN
 						CurrencyID: doc.CurrencyCode,
 						Value:      line.UnitPrice * (1 + getTotalTaxRate(line.Taxes)/100),
 					},
-					PriceTypeCode: "01",
+					PriceTypeCode: PriceTypeCode{Value: "01"},
 				},
 			},
 		}

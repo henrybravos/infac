@@ -9,7 +9,6 @@ import (
 	"infac/internal/config"
 	"infac/internal/handlers"
 	"infac/internal/services"
-	"infac/pkg/soap"
 )
 
 func main() {
@@ -19,22 +18,11 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// Initialize SOAP client
-	var soapClient *soap.Client
-	if cfg.SUNAT.OSE.Enabled {
-		soapClient = soap.NewClient(cfg.SUNAT.OSE.URL, cfg.SUNAT.OSE.Username, cfg.SUNAT.OSE.Password)
-	} else {
-		soapClient = soap.NewClient(cfg.SUNAT.URL, cfg.SUNAT.Username, cfg.SUNAT.Password)
-	}
-
-	// Initialize services
-	documentService := services.NewDocumentService(soapClient, &cfg.Issuer)
+	// Initialize services (now using sunatlib internally)
+	documentService := services.NewDocumentService(&cfg.Issuer)
 
 	// Initialize handlers
 	documentHandler := handlers.NewDocumentHandler(documentService)
-	debugHandler := handlers.NewDebugHandler(&cfg.Issuer)
-	fileHandler := handlers.NewFileHandler(&cfg.Issuer)
-	configDebugHandler := handlers.NewConfigDebugHandler(&cfg.Issuer)
 
 	// Setup Gin router
 	r := gin.Default()
@@ -68,9 +56,6 @@ func main() {
 
 	// Register routes
 	documentHandler.RegisterRoutes(r)
-	debugHandler.RegisterRoutes(r)
-	fileHandler.RegisterRoutes(r)
-	configDebugHandler.RegisterRoutes(r)
 
 	// Start server
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)

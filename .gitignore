@@ -1,2 +1,55 @@
+# IDE files
+.vscode/
+.idea/
+
+# Build artifacts
+tmp/
+*.exe
+*.test
+*.prof
+infac
+
+# Development
+.air.toml
 CLAUDE.md
-signature
+
+# Certificates and private keys (keep .go files)
+pkg/signature/*.pfx
+pkg/signature/*.p12
+pkg/signature/*.pem
+pkg/signature/*.key
+pkg/signature/temp/
+pkg/signature/password.txt
+
+# Storage files
+storage/
+*.xml
+*.zip
+*.pdf
+
+# Temporary files
+*.json.tmp
+complete_files.json
+temp/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Go vendor
+vendor/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

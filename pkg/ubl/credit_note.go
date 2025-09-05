@@ -95,10 +95,11 @@ func GenerateCreditNoteXML(doc *models.Document, issuer *models.Company) (*Credi
 		}
 	}
 	
-	// Signature (similar a Invoice)
+	// Signature (using document-specific ID)
+	documentID := fmt.Sprintf("%s-%s", doc.Serie, doc.Number)
 	creditNote.Signature = []Signature{
 		{
-			ID: "IDSignST",
+			ID: documentID,
 			SignatoryParty: SignatoryParty{
 				PartyIdentification: PartyIdentification{
 					ID: IDType{Value: issuer.DocumentNumber},
@@ -109,7 +110,7 @@ func GenerateCreditNoteXML(doc *models.Document, issuer *models.Company) (*Credi
 			},
 			DigitalSignatureAttachment: DigitalSignatureAttachment{
 				ExternalReference: ExternalReference{
-					URI: "#SignatureST",
+					URI: fmt.Sprintf("#%s", documentID),
 				},
 			},
 		},
@@ -143,7 +144,13 @@ func GenerateCreditNoteXML(doc *models.Document, issuer *models.Company) (*Credi
 						Value:            issuer.DocumentNumber,
 					},
 					TaxScheme: TaxScheme{
-						ID:   "9999",
+						ID: IDType{
+							SchemeID:         "6",
+							SchemeName:       "SUNAT:Identificador de Documento de Identidad",
+							SchemeAgencyName: "PE:SUNAT",
+							SchemeURI:        "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06",
+							Value:            issuer.DocumentNumber,
+						},
 						Name: "SUNAT",
 					},
 				},
@@ -194,10 +201,10 @@ func GenerateCreditNoteXML(doc *models.Document, issuer *models.Company) (*Credi
 					TaxableAmount: MonetaryAmount{CurrencyID: doc.CurrencyCode, Value: 0},
 					TaxAmount:     MonetaryAmount{CurrencyID: doc.CurrencyCode, Value: 0},
 					TaxCategory: TaxCategory{
-						ID:      tax.Code,
+						ID: IDType{Value: getTaxCategoryID(tax.Type)},
 						Percent: tax.Rate,
 						TaxScheme: TaxScheme{
-							ID:   getTaxSchemeID(tax.Type),
+							ID: IDType{Value: getTaxSchemeID(tax.Type)},
 							Name: string(tax.Type),
 						},
 					},
@@ -258,7 +265,7 @@ func GenerateCreditNoteXML(doc *models.Document, issuer *models.Company) (*Credi
 		}
 		
 		if line.ProductCode != "" {
-			creditNoteLine.Item.SellersItemIdentification = SellersItemIdentification{
+			creditNoteLine.Item.SellersItemIdentification = &SellersItemIdentification{
 				ID: line.ProductCode,
 			}
 		}
@@ -281,10 +288,10 @@ func GenerateCreditNoteXML(doc *models.Document, issuer *models.Company) (*Credi
 						Value:      tax.Amount,
 					},
 					TaxCategory: TaxCategory{
-						ID:      tax.Code,
+						ID: IDType{Value: getTaxCategoryID(tax.Type)},
 						Percent: tax.Rate,
 						TaxScheme: TaxScheme{
-							ID:   getTaxSchemeID(tax.Type),
+							ID: IDType{Value: getTaxSchemeID(tax.Type)},
 							Name: string(tax.Type),
 						},
 					},
@@ -302,7 +309,7 @@ func GenerateCreditNoteXML(doc *models.Document, issuer *models.Company) (*Credi
 						CurrencyID: doc.CurrencyCode,
 						Value:      line.UnitPrice * (1 + getTotalTaxRate(line.Taxes)/100),
 					},
-					PriceTypeCode: "01",
+					PriceTypeCode: PriceTypeCode{Value: "01"},
 				},
 			},
 		}

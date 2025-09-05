@@ -55,17 +55,18 @@ const (
 )
 
 type Company struct {
-	DocumentType   string `json:"document_type" mapstructure:"document_type"`
-	DocumentNumber string `json:"document_number" mapstructure:"document_number"`
-	Name           string `json:"name" mapstructure:"name"`
-	TradeName      string `json:"trade_name,omitempty" mapstructure:"trade_name"`
-	Address        string `json:"address" mapstructure:"address"`
-	District       string `json:"district" mapstructure:"district"`
-	Province       string `json:"province" mapstructure:"province"`
-	Department     string `json:"department" mapstructure:"department"`
-	Country        string `json:"country" mapstructure:"country"`
-	Email          string `json:"email,omitempty" mapstructure:"email"`
-	Phone          string `json:"phone,omitempty" mapstructure:"phone"`
+	DocumentType        string `json:"document_type" mapstructure:"document_type"`
+	DocumentNumber      string `json:"document_number" mapstructure:"document_number"`
+	Name                string `json:"name" mapstructure:"name"`
+	TradeName           string `json:"trade_name,omitempty" mapstructure:"trade_name"`
+	Address             string `json:"address" mapstructure:"address"`
+	District            string `json:"district" mapstructure:"district"`
+	Province            string `json:"province" mapstructure:"province"`
+	Department          string `json:"department" mapstructure:"department"`
+	Country             string `json:"country" mapstructure:"country"`
+	Email               string `json:"email,omitempty" mapstructure:"email"`
+	Phone               string `json:"phone,omitempty" mapstructure:"phone"`
+	EstablishmentCode   string `json:"establishment_code,omitempty" mapstructure:"establishment_code"` // Código de local anexo
 }
 
 type DocumentLine struct {

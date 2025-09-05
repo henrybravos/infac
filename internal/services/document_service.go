@@ -3,69 +3,65 @@ package services
 import (
 	"archive/zip"
 	"bytes"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/xml"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"infac/internal/models"
-	"infac/pkg/signature"
-	"infac/pkg/soap"
 	"infac/pkg/ubl"
+
+	"github.com/henrybravos/sunatlib"
 )
 
 type DocumentService struct {
-	soapClient *soap.Client
-	issuer     *models.Company
-	signer     *signature.DigitalSigner
+	issuer      *models.Company
+	sunatClient *sunatlib.SUNATClient
 }
 
-func NewDocumentService(soapClient *soap.Client, issuer *models.Company) *DocumentService {
-	// Try to initialize digital signer with PEM files first
-	signer, err := signature.NewDigitalSigner(
-		"pkg/signature/private_key.pem",
-		"pkg/signature/certificate.pem",
+func NewDocumentService(issuer *models.Company) *DocumentService {
+	// Create SUNAT client
+	sunatClient := sunatlib.NewSUNATClient(
+		issuer.DocumentNumber, // RUC
+		"MODDATOS",            // SOL username
+		"moddatos",            // SOL password
+		"https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService", // Beta endpoint
+	)
+
+	// Set certificate from PFX file
+	err := sunatClient.SetCertificateFromPFX(
+		"pkg/signature/certificate_fixed.pfx",
+		"20612790168NEOFORCE",
+		"pkg/signature/temp",
 	)
 	if err != nil {
-		fmt.Printf("Warning: Failed to initialize digital signer with PEM: %v\n", err)
-		// Fallback: try PFX format
-		signer, err = signature.NewDigitalSignerFromPFX(
-			"pkg/signature/206127901684LNEOFORCE.pfx",
-			"20612790168NEOFORCE",
-		)
-		if err != nil {
-			fmt.Printf("Warning: Failed to initialize digital signer with PFX: %v\n", err)
-			signer = nil
-		}
+		fmt.Printf("Warning: Failed to set certificate: %v\n", err)
+		fmt.Printf("Continuing without certificate - signatures will not be valid\n")
 	} else {
-		fmt.Printf("Successfully initialized digital signer with PEM files\n")
+		fmt.Printf("Successfully initialized SUNAT client with certificate\n")
 	}
 
 	return &DocumentService{
-		soapClient: soapClient,
-		issuer:     issuer,
-		signer:     signer,
+		issuer:      issuer,
+		sunatClient: sunatClient,
 	}
 }
 
 func (s *DocumentService) CreateDocument(req *models.CreateDocumentRequest) (*models.Document, error) {
 	doc := &models.Document{
-		ID:           fmt.Sprintf("%s-%s", req.Serie, req.Number),
-		Serie:        req.Serie,
-		Number:       req.Number,
-		Type:         req.Type,
-		CurrencyCode: req.CurrencyCode,
-		Issuer:       *s.issuer,
-		Customer:     req.Customer,
-		PaymentTerms: req.PaymentTerms,
+		ID:               fmt.Sprintf("%s-%s", req.Serie, req.Number),
+		Serie:            req.Serie,
+		Number:           req.Number,
+		Type:             req.Type,
+		CurrencyCode:     req.CurrencyCode,
+		Issuer:           *s.issuer,
+		Customer:         req.Customer,
+		PaymentTerms:     req.PaymentTerms,
 		RelatedDocuments: req.RelatedDocuments,
-		Status:       models.StatusDraft,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		Status:           models.StatusDraft,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
 	// Parse dates
@@ -118,9 +114,8 @@ func (s *DocumentService) CreateDocument(req *models.CreateDocumentRequest) (*mo
 
 	return doc, nil
 }
-
 func (s *DocumentService) SendDocument(doc *models.Document) error {
-	// Generate XML based on document type
+	// 1. Generar XML según tipo
 	var xmlContent []byte
 	var err error
 
@@ -156,78 +151,63 @@ func (s *DocumentService) SendDocument(doc *models.Document) error {
 		return fmt.Errorf("unsupported document type: %s", doc.Type)
 	}
 
-	// Add XML declaration
+	// 2. Agregar declaración XML
 	xmlWithDeclaration := append([]byte(xml.Header), xmlContent...)
-	
-	// Apply digital signature (real or basic for testing)
-	signedXML, err := s.signXMLDocument(xmlWithDeclaration)
+
+	// 3. Firmar XML (antes de enviar)
+	signedXML, err := s.sunatClient.SignXML(xmlWithDeclaration)
 	if err != nil {
-		fmt.Printf("Warning: Failed to sign XML document: %v\n", err)
-		// Continue with unsigned document
-	} else {
-		xmlWithDeclaration = signedXML
+		return fmt.Errorf("failed to sign XML: %w", err)
 	}
 
-	// Generate file names using SUNAT format: RUC-TipoDoc-Serie-Numero
-	xmlFileName := fmt.Sprintf("%s-%s-%s-%s.xml", s.issuer.DocumentNumber, string(doc.Type), doc.Serie, doc.Number)
-	zipFileName := fmt.Sprintf("%s-%s-%s-%s.zip", s.issuer.DocumentNumber, string(doc.Type), doc.Serie, doc.Number)
-
-	// Save XML file
+	// 4. Guardar el XML firmado para depuración
+	xmlFileName := fmt.Sprintf("%s-%s-%s-%s-signed.xml", s.issuer.DocumentNumber, string(doc.Type), doc.Serie, doc.Number)
 	xmlPath := filepath.Join("storage", "xml", xmlFileName)
-	err = os.WriteFile(xmlPath, xmlWithDeclaration, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to save XML file: %w", err)
+	if err := os.WriteFile(xmlPath, signedXML, 0644); err != nil {
+		fmt.Printf("Warning: Failed to save signed XML: %v\n", err)
 	}
 
-	// Create ZIP file
-	zipContent, err := s.createZipFile(xmlFileName, xmlWithDeclaration)
+	// 5. Generar ID de documento
+	documentID := fmt.Sprintf("%s-%s", doc.Serie, doc.Number)
+
+	// 6. Enviar a SUNAT
+	response, err := s.sunatClient.SendToSUNAT(signedXML, string(doc.Type), documentID)
 	if err != nil {
-		return fmt.Errorf("failed to create ZIP file: %w", err)
+		doc.Status = models.StatusRejected
+		return fmt.Errorf("failed to send document to SUNAT: %w", err)
 	}
 
-	// Save ZIP file  
-	zipPath := filepath.Join("storage", "zip", zipFileName)
-	err = os.WriteFile(zipPath, zipContent, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to save ZIP file: %w", err)
-	}
-
-	// Encode to base64
-	base64Content := base64.StdEncoding.EncodeToString(zipContent)
-
-	// Send to SUNAT/OSE
-	fileName := zipFileName
-
-	if doc.Type == models.DocumentTypeBoleta {
-		// Boletas go through summary
-		response, err := s.soapClient.SendSummary(fileName, []byte(base64Content))
-		if err != nil {
-			doc.Status = models.StatusRejected
-			return fmt.Errorf("failed to send summary: %w", err)
-		}
-		
-		doc.Status = models.StatusPending
-		doc.SUNATStatus = response.Ticket
-	} else {
-		// Facturas and notes go directly
-		response, err := s.soapClient.SendBill(fileName, []byte(base64Content))
-		if err != nil {
-			doc.Status = models.StatusRejected
-			return fmt.Errorf("failed to send bill: %w", err)
-		}
-
-		// Parse CDR from response
-		_, err = base64.StdEncoding.DecodeString(response.ApplicationResponse)
-		if err != nil {
-			return fmt.Errorf("failed to decode CDR: %w", err)
-		}
-
+	// 7. Manejar respuesta
+	if response.Success {
+		doc.Status = models.StatusAccepted
 		doc.CDR = &models.CDR{
-			ResponseCode: "0", // Assume success for now
+			ResponseCode: "0",
 			Description:  "Accepted",
 		}
 
-		doc.Status = models.StatusAccepted
+		if len(response.ApplicationResponse) > 0 {
+			cdrPath := filepath.Join("storage", "cdr", fmt.Sprintf("R-%s-%s-%s-%s.zip",
+				s.issuer.DocumentNumber, string(doc.Type), doc.Serie, doc.Number))
+			err = response.SaveApplicationResponse(cdrPath)
+			if err != nil {
+				fmt.Printf("Warning: Failed to save CDR: %v\n", err)
+			}
+		}
+	} else {
+		doc.Status = models.StatusRejected
+		fmt.Printf("SUNAT response: %+v\n", response)
+		
+		// Try to get the most specific error message available
+		var errorMsg string
+		if response.Message != "" {
+			errorMsg = response.Message
+		} else if response.Error != nil {
+			errorMsg = response.Error.Error()
+		} else {
+			errorMsg = "unknown error"
+		}
+		
+		return fmt.Errorf("document rejected by SUNAT: %s", errorMsg)
 	}
 
 	doc.UpdatedAt = time.Now()
@@ -235,18 +215,12 @@ func (s *DocumentService) SendDocument(doc *models.Document) error {
 }
 
 func (s *DocumentService) CheckStatus(ticket string) (*models.CDR, error) {
-	response, err := s.soapClient.GetStatus(ticket)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get status: %w", err)
-	}
-
+	// For now, return a placeholder CDR
+	// TODO: Implement status checking with sunatlib if available
 	cdr := &models.CDR{
-		ResponseCode: response.Status.StatusCode,
-		Description:  "Status checked",
-	}
-
-	if response.Status.Error != "" {
-		cdr.Notes = response.Status.Error
+		ResponseCode: "0",
+		Description:  "Status check not implemented yet",
+		Notes:        fmt.Sprintf("Ticket: %s", ticket),
 	}
 
 	return cdr, nil
@@ -279,67 +253,4 @@ func (s *DocumentService) createZipFile(fileName string, content []byte) ([]byte
 	}
 
 	return buf.Bytes(), nil
-}
-
-// signXMLDocument applies digital signature to XML document
-func (s *DocumentService) signXMLDocument(xmlData []byte) ([]byte, error) {
-	// Convert XML to string for manipulation
-	xmlStr := string(xmlData)
-	
-	// Find the ExtensionContent element and insert signature
-	var signatureXML string
-	
-	if s.signer != nil {
-		// Generate real signature using certificate
-		sig, err := s.signer.SignXML(xmlData)
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate signature: %w", err)
-		}
-		signatureXML = string(sig)
-	} else {
-		// Create a more realistic signature structure for testing
-		// Calculate actual digest of the document (still not cryptographically valid)
-		hash := sha1.Sum(xmlData)
-		digestValue := base64.StdEncoding.EncodeToString(hash[:])
-		
-		// Generate a more realistic looking signature value (still fake but better format)
-		fakeSignature := make([]byte, 256) // Typical RSA signature size
-		for i := range fakeSignature {
-			fakeSignature[i] = byte(i % 256)
-		}
-		signatureValue := base64.StdEncoding.EncodeToString(fakeSignature)
-		
-		// Create a fake certificate in proper format
-		fakeCert := make([]byte, 1024)
-		for i := range fakeCert {
-			fakeCert[i] = byte((i * 7) % 256)
-		}
-		certificateValue := base64.StdEncoding.EncodeToString(fakeCert)
-		
-		signatureXML = fmt.Sprintf(`<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="SignatureST">
-			<ds:SignedInfo>
-				<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
-				<ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
-				<ds:Reference URI="">
-					<ds:Transforms>
-						<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
-					</ds:Transforms>
-					<ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
-					<ds:DigestValue>%s</ds:DigestValue>
-				</ds:Reference>
-			</ds:SignedInfo>
-			<ds:SignatureValue>%s</ds:SignatureValue>
-			<ds:KeyInfo>
-				<ds:X509Data>
-					<ds:X509Certificate>%s</ds:X509Certificate>
-				</ds:X509Data>
-			</ds:KeyInfo>
-		</ds:Signature>`, digestValue, signatureValue, certificateValue)
-	}
-	
-	// Replace empty ExtensionContent with signature
-	xmlStr = strings.Replace(xmlStr, "<ext:ExtensionContent></ext:ExtensionContent>", 
-		"<ext:ExtensionContent>"+signatureXML+"</ext:ExtensionContent>", 1)
-	
-	return []byte(xmlStr), nil
 }

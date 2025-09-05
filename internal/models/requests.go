@@ -12,7 +12,7 @@ type CreateDocumentRequest struct {
 	
 	Lines []CreateDocumentLineRequest `json:"lines" binding:"required,min=1"`
 	
-	PaymentTerms *PaymentTerms `json:"payment_terms,omitempty"`
+	PaymentTerms *PaymentTerms `json:"payment_terms" binding:"required"`
 	
 	// Para notas de crédito/débito
 	RelatedDocuments []RelatedDocument `json:"related_documents,omitempty"`
